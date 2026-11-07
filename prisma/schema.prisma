@@ -1,0 +1,183 @@
+generator client {
+ provider = "prisma-client-js"
+}
+datasource db {
+ provider = "postgresql"
+ url = env("DATABASE_URL")
+}
+enum Role { 
+ OPERATOR
+ OWNER
+}
+enum Mode {
+ TWILIO_FORWARD
+ CONDITIONAL_FORWARD
+}
+enum SetupStatus {
+ INCOMPLETE
+ READY
+ TESTED
+ ACTIVE
+ SUSPENDED
+}
+enum CallOutcome {
+ ANSWERED
+ NO_ANSWER
+ BUSY
+ FAILED
+ FORWARDED
+ UNKNOWN
+}
+enum EnquiryStatus {
+ NEW
+ CONTACTED
+ BOOKED
+ CLOSED
+ INVALID
+}
+enum SmsDirection {
+ OUTBOUND
+ INBOUND
+}
+enum SmsStatus {
+ QUEUED
+ SENT
+ DELIVERED
+ FAILED
+ UNDELIVERED
+ RECEIVED
+ SUPPRESSED
+}
+model User {
+ id String @id @default(cuid())
+ email String @unique
+ passwordHash String
+ role Role
+ businessId String?
+ business Business? @relation(fields:[businessId],references:[id])
+ createdAt DateTime @default(now())
+}
+model Business {
+ id String @id @default(cuid())
+ name String
+ trade String
+ email String
+ phone String
+ mode Mode
+ callbackPhone String?
+ template String
+ cooldownMinutes Int @default(60)
+ automationEnabled Boolean @default(false)
+ setupStatus SetupStatus @default(INCOMPLETE)
+ demo Boolean @default(false)
+ createdAt DateTime @default(now())
+ users User[]
+ numbers PhoneNumber[]
+ calls IncomingCall[]
+ enquiries Enquiry[]
+ suppressions Suppression[]
+ jobs OutboxJob[]
+ events WebhookEvent[]
+ tests SetupTest[]
+ audits AuditEvent[]
+}
+model PhoneNumber {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id],onDelete:Cascade)
+ number String @unique
+ purpose String
+ voice Boolean @default(false)
+ sms Boolean @default(false)
+ twoWay Boolean @default(false)
+ active Boolean @default(true)
+}
+model IncomingCall {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id])
+ sid String @unique
+ from String?
+ to String
+ outcome CallOutcome @default(UNKNOWN)
+ simulated Boolean @default(false)
+ createdAt DateTime @default(now())
+ enquiry Enquiry?
+}
+model Enquiry {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id])
+ caller String?
+ callId String? @unique
+ call IncomingCall? @relation(fields:[callId],references:[id])
+ status EnquiryStatus @default(NEW)
+ replyReceived Boolean @default(false)
+ notes String @default("")
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ messages SmsMessage[]
+}
+model SmsMessage {
+ id String @id @default(cuid())
+ businessId String
+ enquiryId String?
+ enquiry Enquiry? @relation(fields:[enquiryId],references:[id])
+ sid String? @unique
+ direction SmsDirection
+ from String
+ to String
+ body String
+ status SmsStatus
+ simulated Boolean @default(false)
+ createdAt DateTime @default(now())
+}
+model Suppression {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id])
+ phone String
+ reason String
+ active Boolean @default(true)
+ createdAt DateTime @default(now())
+ @@unique([businessId,phone])
+}
+model WebhookEvent {
+ id String @id @default(cuid())
+ businessId String?
+ business Business? @relation(fields:[businessId],references:[id])
+ externalId String @unique
+ type String
+ payload Json
+ processedAt DateTime @default(now())
+}
+model OutboxJob {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id])
+ enquiryId String?
+ type String
+ payload Json
+ attempts Int @default(0)
+ availableAt DateTime @default(now())
+ completedAt DateTime?
+ error String?
+ createdAt DateTime @default(now())
+}
+model SetupTest {
+ id String @id @default(cuid())
+ businessId String
+ business Business @relation(fields:[businessId],references:[id])
+ type String
+ passed Boolean
+ details String
+ createdAt DateTime @default(now())
+}
+model AuditEvent {
+ id String @id @default(cuid())
+ businessId String?
+ business Business? @relation(fields:[businessId],references:[id])
+ actorId String?
+ action String
+ details Json?
+}

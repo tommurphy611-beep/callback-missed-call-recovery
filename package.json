@@ -1,0 +1,6 @@
+{
+  "name":"callback-missed-call-recovery","version":"1.0.0","private":true,"type":"module",
+  "scripts":{"dev":"tsx watch src/server.ts","build":"tsc","start":"node dist/server.js","test":"vitest run","prisma:generate":"prisma generate","prisma:migrate":"prisma migrate dev","prisma:deploy":"prisma migrate deploy","seed":"tsx prisma/seed.ts","preflight":"tsx scripts/preflight.ts"},
+  "dependencies":{"@prisma/client":"^6.19.0","bcryptjs":"^2.4.3","cookie-parser":"^1.4.7","dotenv":"^16.6.1","ejs":"^3.1.10","express":"^5.1.0","express-rate-limit":"^8.2.1","express-session":"^1.18.2","helmet":"^8.1.0","twilio":"^5.10.3","zod":"^3.24.2"},
+  "devDependencies":{"@types/bcryptjs":"^2.4.6","@types/cookie-parser":"^1.4.9","@types/ejs":"^3.1.5","@types/express":"^5.0.6","@types/express-session":"^1.18.0","@types/node":"^24.10.1","prisma":"^6.19.0","tsx":"^4.20.6","typescript":"^5.9.3","vitest":"^4.0.16"}
+}

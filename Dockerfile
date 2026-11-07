@@ -10,4 +10,6 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/views ./dist/views
+COPY --from=build /app/public ./dist/public
 CMD ["sh","-c","npx prisma migrate deploy && npm run seed && node dist/src/server.js"]
